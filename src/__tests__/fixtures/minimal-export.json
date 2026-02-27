@@ -1,0 +1,43 @@
+{
+    "name": "Test Channel",
+    "type": "personal_chat",
+    "id": 12345,
+    "messages": [
+        {
+            "id": 1,
+            "type": "message",
+            "date": "2026-01-10T12:00:00",
+            "date_unixtime": "1768089600",
+            "from": "Author",
+            "from_id": "channel123",
+            "text": "Hello world",
+            "text_entities": [
+                {
+                    "type": "bold",
+                    "text": "Hello world"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "message",
+            "date": "2026-01-11T14:00:00",
+            "date_unixtime": "1768183200",
+            "from": "Author",
+            "from_id": "channel123",
+            "text": "Second post\n\nBody text here.",
+            "text_entities": [
+                {
+                    "type": "bold",
+                    "text": "Second post"
+                },
+                {
+                    "type": "plain",
+                    "text": "\n\nBody text here."
+                }
+            ],
+            "photo": "photos/photo_001.jpg",
+            "photo_file_size": 12345
+        }
+    ]
+}

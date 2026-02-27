@@ -7,16 +7,11 @@ import {
     truncateOnWordBoundary,
     extractFirstSentence,
 } from '../formatting.js';
-import type { TextEntity } from '../types.js';
+import { entity } from './helpers.js';
 
 // ── convertEntities ──────────────────────────────────────────────────────────
 
 describe('convertEntities', () => {
-    const entity = (type: string, text: string, href?: string): TextEntity => ({
-        type,
-        text,
-        ...(href ? { href } : {}),
-    });
 
     it('passes plain text through', () => {
         expect(convertEntities([entity('plain', 'hello')], false)).toBe('hello');

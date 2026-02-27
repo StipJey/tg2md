@@ -1,0 +1,79 @@
+{
+    "name": "Mixed Channel",
+    "type": "personal_chat",
+    "id": 99999,
+    "messages": [
+        {
+            "id": 10,
+            "type": "message",
+            "date": "2026-02-01T10:00:00",
+            "date_unixtime": "1769940000",
+            "from": "Author",
+            "from_id": "channel1",
+            "text": "Normal post",
+            "text_entities": [
+                {
+                    "type": "bold",
+                    "text": "Normal post"
+                }
+            ]
+        },
+        {
+            "id": 11,
+            "type": "message",
+            "date": "2026-02-02T10:00:00",
+            "date_unixtime": "1770026400",
+            "from": "Author",
+            "from_id": "channel1",
+            "forwarded_from": "Other Channel",
+            "text": "Forwarded text",
+            "text_entities": [
+                {
+                    "type": "plain",
+                    "text": "Forwarded text"
+                }
+            ]
+        },
+        {
+            "id": 12,
+            "type": "service",
+            "date": "2026-02-03T10:00:00",
+            "date_unixtime": "1770112800",
+            "from": "Author",
+            "from_id": "channel1",
+            "text": "",
+            "text_entities": []
+        },
+        {
+            "id": 13,
+            "type": "message",
+            "date": "2026-02-04T10:00:00",
+            "date_unixtime": "1770199200",
+            "from": "Author",
+            "from_id": "channel1",
+            "text": "",
+            "text_entities": [],
+            "media_type": "video_file",
+            "file": "video/video.mp4"
+        },
+        {
+            "id": 14,
+            "type": "message",
+            "date": "2026-02-05T10:00:00",
+            "date_unixtime": "1770285600",
+            "from": "Author",
+            "from_id": "channel1",
+            "text": [
+                "Video with text"
+            ],
+            "text_entities": [
+                {
+                    "type": "plain",
+                    "text": "Video with text"
+                }
+            ],
+            "media_type": "video_file",
+            "file": "video/video2.mp4"
+        }
+    ]
+}

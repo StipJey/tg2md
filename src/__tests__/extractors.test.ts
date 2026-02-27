@@ -1,26 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { extractTitle, extractDescription } from '../extractors.js';
-import type { Message, TextEntity } from '../types.js';
-
-/** Helper to build a minimal Message with given text_entities */
-function makeMsg(
-    entities: TextEntity[],
-    overrides: Partial<Message> = {},
-): Message {
-    return {
-        id: 1,
-        type: 'message',
-        date: '2026-01-15T10:00:00',
-        date_unixtime: '1768468800',
-        from: 'Test',
-        from_id: 'user123',
-        text: entities.map((e) => e.text).join(''),
-        text_entities: entities,
-        ...overrides,
-    };
-}
-
-const entity = (type: string, text: string): TextEntity => ({ type, text });
+import { makeMsg, entity } from './helpers.js';
 
 // ── extractTitle ─────────────────────────────────────────────────────────────
 

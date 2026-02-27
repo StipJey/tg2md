@@ -235,4 +235,8 @@ ${DIVIDER}
     }
 }
 
-main();
+// Run only when executed as CLI entry point, not when imported
+import { fileURLToPath } from 'node:url';
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    main();
+}
