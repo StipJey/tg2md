@@ -49,6 +49,19 @@ ${dim}  ────────────────────────
         process.exit(0);
     }
 
+    // ── ANSI colors (shared across runtime output) ─────────────────────────
+    const reset = '\x1b[0m';
+    const bold = '\x1b[1m';
+    const dim = '\x1b[2m';
+    const cyan = '\x1b[36m';
+    const green = '\x1b[32m';
+    const yellow = '\x1b[33m';
+    const magenta = '\x1b[35m';
+    const white = '\x1b[97m';
+    const red = '\x1b[31m';
+
+    const startTime = process.hrtime.bigint();
+
     const inputPath = args[0];
     let outputDir = './output';
 
@@ -60,28 +73,31 @@ ${dim}  ────────────────────────
 
     // Validate input file
     if (!fs.existsSync(inputPath)) {
-        console.error(`❌ File not found: ${inputPath}`);
+        console.error(`\n${red}${bold}  ✖ File not found:${reset} ${white}${inputPath}${reset}\n`);
         process.exit(1);
     }
 
-    console.log(`📂 Reading: ${inputPath}`);
+    console.log(`\n${dim}  ─────────────────────────────────────────────────${reset}`);
+    console.log(`${cyan}  📂 Reading  ${reset}${white}${inputPath}${reset}`);
 
     const { channelName, messages, sourceDir } = parseExport(inputPath);
 
-    console.log(`📺 Channel: ${channelName}`);
-    console.log(`📝 Messages: ${messages.length}\n`);
+    console.log(`${cyan}  📺 Channel  ${reset}${white}${bold}${channelName}${reset}`);
+    console.log(`${cyan}  📝 Messages ${reset}${white}${bold}${messages.length}${reset}`);
+    console.log(`${dim}  ─────────────────────────────────────────────────${reset}\n`);
 
     // Clear and recreate output dirs
     const outputPath = path.resolve(outputDir);
     const imagesPath = path.join(outputPath, 'images');
     if (fs.existsSync(outputPath)) {
         fs.rmSync(outputPath, { recursive: true, force: true });
-        console.log(`🗑️  Cleared: ${outputPath}\n`);
+        console.log(`${yellow}  🗑  Cleared  ${reset}${dim}${outputPath}${reset}\n`);
     }
     fs.mkdirSync(outputPath, { recursive: true });
     fs.mkdirSync(imagesPath, { recursive: true });
 
     let created = 0;
+    let imagesCopied = 0;
     const usedFilenames = new Set<string>();
 
     for (const msg of messages) {
@@ -109,20 +125,33 @@ ${dim}  ────────────────────────
 
             if (fs.existsSync(photoSrc)) {
                 fs.copyFileSync(photoSrc, photoDst);
+                imagesCopied++;
             } else {
-                console.warn(`  ⚠️  Photo not found: ${photoSrc}`);
+                console.warn(`  ${yellow}⚠  Image not found:${reset} ${dim}${photoSrc}${reset}`);
             }
         }
 
         const title = filename.replace(/\.md$/, '');
-        console.log(`  ✅ ${title}`);
+        console.log(`  ${green}✔${reset}  ${dim}${title}${reset}`);
         created++;
     }
 
-    console.log(`\n🎉 Done! Created ${created} files in ${outputPath}`);
-    if (fs.readdirSync(imagesPath).length > 0) {
-        console.log(`📸 Images copied to ${imagesPath}`);
-    }
+    // ── Summary ─────────────────────────────────────────────────────────────
+    const elapsedMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
+    const elapsed = elapsedMs < 1000
+        ? `${elapsedMs.toFixed(0)} ms`
+        : `${(elapsedMs / 1000).toFixed(2)} s`;
+
+    console.log(`
+${dim}  ─────────────────────────────────────────────────${reset}
+${green}${bold}  ✔ Done!${reset}
+
+${cyan}    Files created  ${reset}${white}${bold}${created}${reset}
+${cyan}    Images copied  ${reset}${white}${bold}${imagesCopied}${reset}
+${cyan}    Output         ${reset}${white}${outputPath}${reset}
+${magenta}    Time elapsed   ${reset}${white}${bold}${elapsed}${reset}
+${dim}  ─────────────────────────────────────────────────${reset}
+`);
 }
 
 main();
