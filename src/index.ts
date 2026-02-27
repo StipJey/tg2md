@@ -112,8 +112,9 @@ function parseArgs(argv: string[]): Args {
     const clean = argv.includes('--clean') || argv.includes('-c');
     const rewrite = argv.includes('--rewrite') || argv.includes('-r');
 
-    // First non-flag argument is the input path
-    const inputPath = argv.find((a) => !a.startsWith('-')) ?? '';
+    // First positional argument is the input path (skip values of --output / -o)
+    const skipIdx = outputIdx !== -1 ? outputIdx + 1 : -1;
+    const inputPath = argv.find((a, i) => !a.startsWith('-') && i !== skipIdx) ?? '';
 
     return { inputPath, outputDir, clean, rewrite };
 }
@@ -178,19 +179,20 @@ function main(): void {
     const usedFilenames = new Set<string>();
 
     for (const msg of messages) {
-        const markdown = convertMessage(msg);
         const filename = uniqueFilename(generateFilename(msg), usedFilenames, msg.id);
         usedFilenames.add(filename);
 
         const filePath = path.join(outputPath, filename);
+        const title = filename.replace(/\.md$/, '');
 
         // Skip existing files unless --rewrite is set
         if (!rewrite && fs.existsSync(filePath)) {
-            console.log(`  ${c.dim}⊘  ${filename.replace(/\.md$/, '')} (skipped)${c.reset}`);
+            console.log(`  ${c.dim}⊘  ${title} (skipped)${c.reset}`);
             skipped++;
             continue;
         }
 
+        const markdown = convertMessage(msg);
         fs.writeFileSync(filePath, markdown, 'utf-8');
 
         if (msg.photo) {
@@ -206,7 +208,7 @@ function main(): void {
             }
         }
 
-        console.log(`  ${c.green}✔${c.reset}  ${c.dim}${filename.replace(/\.md$/, '')}${c.reset}`);
+        console.log(`  ${c.green}✔${c.reset}  ${c.dim}${title}${c.reset}`);
         created++;
     }
 
