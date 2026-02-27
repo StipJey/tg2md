@@ -82,7 +82,7 @@ const KNOWN_FLAGS = new Set([
     '--help', '-h',
 ]);
 
-function parseArgs(argv: string[]): Args {
+export function parseArgs(argv: string[]): Args {
     // Validate flags
     const outputIdx = argv.findIndex((a) => a === '--output' || a === '-o');
 
@@ -120,7 +120,7 @@ function parseArgs(argv: string[]): Args {
 }
 
 // ── Deduplication helper ──────────────────────────────────────────────────────
-function uniqueFilename(filename: string, used: Set<string>, id: number): string {
+export function uniqueFilename(filename: string, used: Set<string>, id: number): string {
     if (!used.has(filename)) return filename;
 
     const ext = path.extname(filename);
