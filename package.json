@@ -1,0 +1,18 @@
+{
+  "name": "tg2md",
+  "version": "1.0.0",
+  "description": "Convert Telegram channel exports to Markdown files",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "convert": "npx tsx src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^25.3.2",
+    "typescript": "^5.9.3"
+  }
+}
