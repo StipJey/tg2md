@@ -9,6 +9,7 @@ npx vitest            # watch-режим
 
 ## Структура
 
+Тесты:
 ```
 __tests__/
 ├── helpers.ts                 # Общие хелперы (makeMsg, entity)
@@ -20,7 +21,7 @@ __tests__/
 ├── extractors.test.ts         # Извлечение заголовка и описания
 ├── converter.test.ts          # Сборка итогового Markdown
 ├── parser.test.ts             # Парсинг и фильтрация JSON-экспорта
-└── cli.integration.test.ts    # E2E: CLI, файловая система, флаги
+└── cli.integration.test.ts    # E2E: CLI, parseArgs, uniqueFilename, флаги
 ```
 
 ## Что тестируется и зачем
