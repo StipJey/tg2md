@@ -45,9 +45,13 @@ Example:
     console.log(`📺 Channel: ${channelName}`);
     console.log(`📝 Messages: ${messages.length}\n`);
 
-    // Create output dirs
+    // Clear and recreate output dirs
     const outputPath = path.resolve(outputDir);
     const imagesPath = path.join(outputPath, 'images');
+    if (fs.existsSync(outputPath)) {
+        fs.rmSync(outputPath, { recursive: true, force: true });
+        console.log(`🗑️  Cleared: ${outputPath}\n`);
+    }
     fs.mkdirSync(outputPath, { recursive: true });
     fs.mkdirSync(imagesPath, { recursive: true });
 
