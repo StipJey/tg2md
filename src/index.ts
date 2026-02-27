@@ -38,13 +38,28 @@ ${c.yellow}${c.bold}  USAGE${c.reset}
 ${c.green}    npx tg2md${c.reset} ${c.white}<path-to-result.json>${c.reset} ${c.blue}[options]${c.reset}
 
 ${c.yellow}${c.bold}  OPTIONS${c.reset}
-${c.green}    --output${c.reset}, ${c.green}-o${c.reset}   ${c.white}Output directory${c.reset}            ${c.dim}(default: ${DEFAULT_OUTPUT})${c.reset}
-${c.green}    --help${c.reset},   ${c.green}-h${c.reset}   ${c.white}Show this help message${c.reset}
+${c.green}    --output${c.reset},  ${c.green}-o${c.reset}   ${c.white}Output directory${c.reset}            ${c.dim}(default: ${DEFAULT_OUTPUT})${c.reset}
+${c.green}    --rewrite${c.reset}, ${c.green}-r${c.reset}   ${c.white}Overwrite existing files${c.reset}
+${c.green}    --clean${c.reset},   ${c.green}-c${c.reset}   ${c.white}Wipe output directory before conversion${c.reset}
+${c.green}    --help${c.reset},    ${c.green}-h${c.reset}   ${c.white}Show this help message${c.reset}
 
-${c.yellow}${c.bold}  EXAMPLE${c.reset}
-${c.dim}    # Export your Telegram channel via Telegram Desktop,${c.reset}
-${c.dim}    # then point tg2md at the result.json file:${c.reset}
-${c.green}    npx tg2md${c.reset} ${c.white}"ChatExport/result.json"${c.reset} ${c.green}-o${c.reset} ${c.white}./output${c.reset}
+${c.yellow}${c.bold}  NOTE${c.reset}
+${c.dim}    By default, existing files are ${c.reset}${c.white}not overwritten${c.reset}${c.dim}. Use:${c.reset}
+${c.green}      --rewrite${c.reset}${c.dim}  to overwrite existing files in place${c.reset}
+${c.green}      --clean${c.reset}${c.dim}    to wipe the entire output directory first${c.reset}
+
+${c.yellow}${c.bold}  EXAMPLES${c.reset}
+${c.dim}    # Basic conversion (skips existing files):${c.reset}
+${c.green}    npx tg2md${c.reset} ${c.white}"ChatExport/result.json"${c.reset}
+
+${c.dim}    # Output to a custom directory:${c.reset}
+${c.green}    npx tg2md${c.reset} ${c.white}"ChatExport/result.json"${c.reset} ${c.green}-o${c.reset} ${c.white}./posts${c.reset}
+
+${c.dim}    # Overwrite previously generated files:${c.reset}
+${c.green}    npx tg2md${c.reset} ${c.white}"ChatExport/result.json"${c.reset} ${c.green}--rewrite${c.reset}
+
+${c.dim}    # Start fresh — wipe output and regenerate:${c.reset}
+${c.green}    npx tg2md${c.reset} ${c.white}"ChatExport/result.json"${c.reset} ${c.green}--clean${c.reset}
 
 ${c.yellow}${c.bold}  AUTHOR${c.reset}
 ${c.magenta}    Telegram channel → https://t.me/+Gwp1QEKuDMlkMzRi${c.reset}
@@ -56,18 +71,51 @@ ${DIVIDER}
 interface Args {
     inputPath: string;
     outputDir: string;
+    clean: boolean;
+    rewrite: boolean;
 }
 
+const KNOWN_FLAGS = new Set([
+    '--output', '-o',
+    '--rewrite', '-r',
+    '--clean', '-c',
+    '--help', '-h',
+]);
+
 function parseArgs(argv: string[]): Args {
+    // Validate flags
     const outputIdx = argv.findIndex((a) => a === '--output' || a === '-o');
+
+    for (let i = 0; i < argv.length; i++) {
+        const arg = argv[i];
+        if (!arg.startsWith('-')) continue;
+        if (KNOWN_FLAGS.has(arg)) {
+            // Skip the value after --output / -o
+            if (arg === '--output' || arg === '-o') i++;
+            continue;
+        }
+        console.error(`\n${c.red}${c.bold}  ✖ Unknown option:${c.reset} ${c.white}${arg}${c.reset}`);
+        console.error(`${c.dim}    Run with ${c.reset}${c.green}--help${c.reset}${c.dim} to see available options.${c.reset}\n`);
+        process.exit(1);
+    }
+
+    if (outputIdx !== -1 && (!argv[outputIdx + 1] || argv[outputIdx + 1].startsWith('-'))) {
+        console.error(`\n${c.red}${c.bold}  ✖ Missing value for ${c.reset}${c.green}${argv[outputIdx]}${c.reset}`);
+        console.error(`${c.dim}    Expected: ${c.reset}${c.green}${argv[outputIdx]}${c.reset} ${c.white}<directory>${c.reset}\n`);
+        process.exit(1);
+    }
+
     const outputDir = outputIdx !== -1 && argv[outputIdx + 1]
         ? argv[outputIdx + 1]
         : DEFAULT_OUTPUT;
 
+    const clean = argv.includes('--clean') || argv.includes('-c');
+    const rewrite = argv.includes('--rewrite') || argv.includes('-r');
+
     // First non-flag argument is the input path
     const inputPath = argv.find((a) => !a.startsWith('-')) ?? '';
 
-    return { inputPath, outputDir };
+    return { inputPath, outputDir, clean, rewrite };
 }
 
 // ── Deduplication helper ──────────────────────────────────────────────────────
@@ -88,7 +136,7 @@ function main(): void {
         process.exit(0);
     }
 
-    const { inputPath, outputDir } = parseArgs(argv);
+    const { inputPath, outputDir, clean, rewrite } = parseArgs(argv);
 
     if (!inputPath) {
         console.error(`\n${c.red}${c.bold}  ✖ No input file specified.${c.reset} Run with ${c.green}--help${c.reset} for usage.\n`);
@@ -116,7 +164,7 @@ function main(): void {
     const outputPath = path.resolve(outputDir);
     const imagesPath = path.join(outputPath, 'images');
 
-    if (fs.existsSync(outputPath)) {
+    if (clean && fs.existsSync(outputPath)) {
         fs.rmSync(outputPath, { recursive: true, force: true });
         console.log(`${c.yellow}  🗑  Cleared  ${c.reset}${c.dim}${outputPath}${c.reset}\n`);
     }
@@ -125,6 +173,7 @@ function main(): void {
 
     // ── Convert messages ─────────────────────────────────────────────────────
     let created = 0;
+    let skipped = 0;
     let imagesCopied = 0;
     const usedFilenames = new Set<string>();
 
@@ -133,7 +182,16 @@ function main(): void {
         const filename = uniqueFilename(generateFilename(msg), usedFilenames, msg.id);
         usedFilenames.add(filename);
 
-        fs.writeFileSync(path.join(outputPath, filename), markdown, 'utf-8');
+        const filePath = path.join(outputPath, filename);
+
+        // Skip existing files unless --rewrite is set
+        if (!rewrite && fs.existsSync(filePath)) {
+            console.log(`  ${c.dim}⊘  ${filename.replace(/\.md$/, '')} (skipped)${c.reset}`);
+            skipped++;
+            continue;
+        }
+
+        fs.writeFileSync(filePath, markdown, 'utf-8');
 
         if (msg.photo) {
             const photoSrc = path.join(sourceDir, msg.photo);
@@ -168,6 +226,11 @@ ${c.cyan}    Output         ${c.reset}${c.white}${outputPath}${c.reset}
 ${c.magenta}    Time elapsed   ${c.reset}${c.white}${c.bold}${elapsed}${c.reset}
 ${DIVIDER}
 `);
+
+    if (skipped > 0) {
+        console.log(`${c.yellow}${c.bold}  ⚠ ${skipped} file(s) skipped${c.reset}${c.dim} (already exist)${c.reset}`);
+        console.log(`${c.dim}    Use ${c.reset}${c.green}--rewrite${c.reset}${c.dim} (${c.reset}${c.green}-r${c.reset}${c.dim}) to overwrite, or ${c.reset}${c.green}--clean${c.reset}${c.dim} (${c.reset}${c.green}-c${c.reset}${c.dim}) to wipe the directory first.${c.reset}\n`);
+    }
 }
 
 main();
