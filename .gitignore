@@ -1,6 +1,4 @@
-examples
-examples/*
-output
-output/*
-node_modules
-node_modules/*
+examples/
+output/
+node_modules/
+dist/

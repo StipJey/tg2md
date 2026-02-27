@@ -1,18 +1,47 @@
 {
   "name": "tg2md",
   "version": "1.0.0",
-  "description": "Convert Telegram channel exports to Markdown files",
-  "main": "dist/index.js",
+  "description": "Convert Telegram channel exports to Markdown / Astro-ready articles",
+  "author": "Evgeny Cherkasov <stipjey@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "telegram",
+    "export",
+    "markdown",
+    "astro",
+    "converter",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stipjey/tg2md"
+  },
+  "homepage": "https://github.com/stipjey/tg2md#readme",
+  "bugs": {
+    "url": "https://github.com/stipjey/tg2md/issues"
+  },
+  "type": "module",
+  "bin": {
+    "tg2md": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "README_EN.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
-    "convert": "npx tsx src/index.ts"
+    "prepare": "npm run build",
+    "convert": "node dist/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
-    "@types/node": "^25.3.2",
+    "@types/node": "^22.0.0",
     "typescript": "^5.9.3"
   }
 }

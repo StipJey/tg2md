@@ -1,7 +1,9 @@
+#!/usr/bin/env node
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parseExport } from './parser.js';
 import { convertMessage, generateFilename } from './converter.js';
+
 
 function main(): void {
     const args = process.argv.slice(2);
