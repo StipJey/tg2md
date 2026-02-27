@@ -9,19 +9,43 @@ function main(): void {
     const args = process.argv.slice(2);
 
     if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
+        const reset = '\x1b[0m';
+        const bold = '\x1b[1m';
+        const dim = '\x1b[2m';
+        const cyan = '\x1b[36m';
+        const green = '\x1b[32m';
+        const yellow = '\x1b[33m';
+        const blue = '\x1b[34m';
+        const magenta = '\x1b[35m';
+        const white = '\x1b[97m';
+
         console.log(`
-tg2md — Convert Telegram channel export to Markdown files
+${cyan}${bold}  ████████╗ ██████╗ ██████╗ ███╗   ███╗██████╗${reset}
+${cyan}${bold}     ██╔══╝██╔════╝╚═════██╗████╗ ████║██╔══██╗${reset}
+${cyan}${bold}     ██║   ██║  ███╗ █████╔╝██╔████╔██║██║  ██║${reset}
+${cyan}${bold}     ██║   ██║   ██║██╔═══╝ ██║╚██╔╝██║██║  ██║${reset}
+${cyan}${bold}     ██║   ╚██████╔╝███████╗██║ ╚═╝ ██║██████╔╝${reset}
+${cyan}${bold}     ╚═╝    ╚═════╝ ╚══════╝╚═╝     ╚═╝╚═════╝ ${reset}
 
-Usage:
-  npx tsx src/index.ts <path-to-result.json> [--output <dir>]
+${white}${bold}  Convert Telegram channel export to Markdown files${reset}
+${dim}  ─────────────────────────────────────────────────${reset}
 
-Options:
-  --output, -o   Output directory (default: ./output)
-  --help, -h     Show this help message
+${yellow}${bold}  USAGE${reset}
+${green}    npx tg2md${reset} ${white}<path-to-result.json>${reset} ${blue}[options]${reset}
 
-Example:
-  npx tsx src/index.ts "examples/ChatExport_2026-02-27 (1)/result.json" -o ./output
-    `);
+${yellow}${bold}  OPTIONS${reset}
+${green}    --output${reset}, ${green}-o${reset}   ${white}Output directory${reset}            ${dim}(default: ./output)${reset}
+${green}    --help${reset},   ${green}-h${reset}   ${white}Show this help message${reset}
+
+${yellow}${bold}  EXAMPLE${reset}
+${dim}    # Export your Telegram channel via Telegram Desktop,${reset}
+${dim}    # then point tg2md at the result.json file:${reset}
+${green}    npx tg2md${reset} ${white}"ChatExport/result.json"${reset} ${green}-o${reset} ${white}./output${reset}
+
+${yellow}${bold}  AUTHOR${reset}
+${magenta}    Telegram channel → https://t.me/+Gwp1QEKuDMlkMzRi${reset}
+${dim}  ─────────────────────────────────────────────────${reset}
+`);
         process.exit(0);
     }
 
