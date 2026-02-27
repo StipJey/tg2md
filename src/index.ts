@@ -4,120 +4,137 @@ import * as path from 'node:path';
 import { parseExport } from './parser.js';
 import { convertMessage, generateFilename } from './converter.js';
 
+// ── ANSI colors ──────────────────────────────────────────────────────────────
+const c = {
+    reset: '\x1b[0m',
+    bold: '\x1b[1m',
+    dim: '\x1b[2m',
+    red: '\x1b[31m',
+    green: '\x1b[32m',
+    yellow: '\x1b[33m',
+    blue: '\x1b[34m',
+    magenta: '\x1b[35m',
+    cyan: '\x1b[36m',
+    white: '\x1b[97m',
+} as const;
 
-function main(): void {
-    const args = process.argv.slice(2);
+const DIVIDER = `${c.dim}  ─────────────────────────────────────────────────${c.reset}`;
+const DEFAULT_OUTPUT = './output';
 
-    if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
-        const reset = '\x1b[0m';
-        const bold = '\x1b[1m';
-        const dim = '\x1b[2m';
-        const cyan = '\x1b[36m';
-        const green = '\x1b[32m';
-        const yellow = '\x1b[33m';
-        const blue = '\x1b[34m';
-        const magenta = '\x1b[35m';
-        const white = '\x1b[97m';
+// ── Help ─────────────────────────────────────────────────────────────────────
+function printHelp(): void {
+    console.log(`
+${c.cyan}${c.bold}  ████████╗ ██████╗ ██████╗ ███╗   ███╗██████╗${c.reset}
+${c.cyan}${c.bold}     ██╔══╝██╔════╝╚═════██╗████╗ ████║██╔══██╗${c.reset}
+${c.cyan}${c.bold}     ██║   ██║  ███╗ █████╔╝██╔████╔██║██║  ██║${c.reset}
+${c.cyan}${c.bold}     ██║   ██║   ██║██╔═══╝ ██║╚██╔╝██║██║  ██║${c.reset}
+${c.cyan}${c.bold}     ██║   ╚██████╔╝███████╗██║ ╚═╝ ██║██████╔╝${c.reset}
+${c.cyan}${c.bold}     ╚═╝    ╚═════╝ ╚══════╝╚═╝     ╚═╝╚═════╝ ${c.reset}
 
-        console.log(`
-${cyan}${bold}  ████████╗ ██████╗ ██████╗ ███╗   ███╗██████╗${reset}
-${cyan}${bold}     ██╔══╝██╔════╝╚═════██╗████╗ ████║██╔══██╗${reset}
-${cyan}${bold}     ██║   ██║  ███╗ █████╔╝██╔████╔██║██║  ██║${reset}
-${cyan}${bold}     ██║   ██║   ██║██╔═══╝ ██║╚██╔╝██║██║  ██║${reset}
-${cyan}${bold}     ██║   ╚██████╔╝███████╗██║ ╚═╝ ██║██████╔╝${reset}
-${cyan}${bold}     ╚═╝    ╚═════╝ ╚══════╝╚═╝     ╚═╝╚═════╝ ${reset}
+${c.white}${c.bold}  Convert Telegram channel export to Markdown files${c.reset}
+${DIVIDER}
 
-${white}${bold}  Convert Telegram channel export to Markdown files${reset}
-${dim}  ─────────────────────────────────────────────────${reset}
+${c.yellow}${c.bold}  USAGE${c.reset}
+${c.green}    npx tg2md${c.reset} ${c.white}<path-to-result.json>${c.reset} ${c.blue}[options]${c.reset}
 
-${yellow}${bold}  USAGE${reset}
-${green}    npx tg2md${reset} ${white}<path-to-result.json>${reset} ${blue}[options]${reset}
+${c.yellow}${c.bold}  OPTIONS${c.reset}
+${c.green}    --output${c.reset}, ${c.green}-o${c.reset}   ${c.white}Output directory${c.reset}            ${c.dim}(default: ${DEFAULT_OUTPUT})${c.reset}
+${c.green}    --help${c.reset},   ${c.green}-h${c.reset}   ${c.white}Show this help message${c.reset}
 
-${yellow}${bold}  OPTIONS${reset}
-${green}    --output${reset}, ${green}-o${reset}   ${white}Output directory${reset}            ${dim}(default: ./output)${reset}
-${green}    --help${reset},   ${green}-h${reset}   ${white}Show this help message${reset}
+${c.yellow}${c.bold}  EXAMPLE${c.reset}
+${c.dim}    # Export your Telegram channel via Telegram Desktop,${c.reset}
+${c.dim}    # then point tg2md at the result.json file:${c.reset}
+${c.green}    npx tg2md${c.reset} ${c.white}"ChatExport/result.json"${c.reset} ${c.green}-o${c.reset} ${c.white}./output${c.reset}
 
-${yellow}${bold}  EXAMPLE${reset}
-${dim}    # Export your Telegram channel via Telegram Desktop,${reset}
-${dim}    # then point tg2md at the result.json file:${reset}
-${green}    npx tg2md${reset} ${white}"ChatExport/result.json"${reset} ${green}-o${reset} ${white}./output${reset}
-
-${yellow}${bold}  AUTHOR${reset}
-${magenta}    Telegram channel → https://t.me/+Gwp1QEKuDMlkMzRi${reset}
-${dim}  ─────────────────────────────────────────────────${reset}
+${c.yellow}${c.bold}  AUTHOR${c.reset}
+${c.magenta}    Telegram channel → https://t.me/+Gwp1QEKuDMlkMzRi${c.reset}
+${DIVIDER}
 `);
+}
+
+// ── Argument parsing ──────────────────────────────────────────────────────────
+interface Args {
+    inputPath: string;
+    outputDir: string;
+}
+
+function parseArgs(argv: string[]): Args {
+    const outputIdx = argv.findIndex((a) => a === '--output' || a === '-o');
+    const outputDir = outputIdx !== -1 && argv[outputIdx + 1]
+        ? argv[outputIdx + 1]
+        : DEFAULT_OUTPUT;
+
+    // First non-flag argument is the input path
+    const inputPath = argv.find((a) => !a.startsWith('-')) ?? '';
+
+    return { inputPath, outputDir };
+}
+
+// ── Deduplication helper ──────────────────────────────────────────────────────
+function uniqueFilename(filename: string, used: Set<string>, id: number): string {
+    if (!used.has(filename)) return filename;
+
+    const ext = path.extname(filename);
+    const base = filename.slice(0, -ext.length);
+    return `${base}-${id}${ext}`;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+function main(): void {
+    const argv = process.argv.slice(2);
+
+    if (argv.length === 0 || argv.includes('--help') || argv.includes('-h')) {
+        printHelp();
         process.exit(0);
     }
 
-    // ── ANSI colors (shared across runtime output) ─────────────────────────
-    const reset = '\x1b[0m';
-    const bold = '\x1b[1m';
-    const dim = '\x1b[2m';
-    const cyan = '\x1b[36m';
-    const green = '\x1b[32m';
-    const yellow = '\x1b[33m';
-    const magenta = '\x1b[35m';
-    const white = '\x1b[97m';
-    const red = '\x1b[31m';
+    const { inputPath, outputDir } = parseArgs(argv);
 
-    const startTime = process.hrtime.bigint();
-
-    const inputPath = args[0];
-    let outputDir = './output';
-
-    // Parse --output / -o flag
-    const outputIdx = args.findIndex((a) => a === '--output' || a === '-o');
-    if (outputIdx !== -1 && args[outputIdx + 1]) {
-        outputDir = args[outputIdx + 1];
-    }
-
-    // Validate input file
-    if (!fs.existsSync(inputPath)) {
-        console.error(`\n${red}${bold}  ✖ File not found:${reset} ${white}${inputPath}${reset}\n`);
+    if (!inputPath) {
+        console.error(`\n${c.red}${c.bold}  ✖ No input file specified.${c.reset} Run with ${c.green}--help${c.reset} for usage.\n`);
         process.exit(1);
     }
 
-    console.log(`\n${dim}  ─────────────────────────────────────────────────${reset}`);
-    console.log(`${cyan}  📂 Reading  ${reset}${white}${inputPath}${reset}`);
+    if (!fs.existsSync(inputPath)) {
+        console.error(`\n${c.red}${c.bold}  ✖ File not found:${c.reset} ${c.white}${inputPath}${c.reset}\n`);
+        process.exit(1);
+    }
+
+    const startTime = process.hrtime.bigint();
+
+    // ── Parse export ────────────────────────────────────────────────────────
+    console.log(`\n${DIVIDER}`);
+    console.log(`${c.cyan}  📂 Reading  ${c.reset}${c.white}${inputPath}${c.reset}`);
 
     const { channelName, messages, sourceDir } = parseExport(inputPath);
 
-    console.log(`${cyan}  📺 Channel  ${reset}${white}${bold}${channelName}${reset}`);
-    console.log(`${cyan}  📝 Messages ${reset}${white}${bold}${messages.length}${reset}`);
-    console.log(`${dim}  ─────────────────────────────────────────────────${reset}\n`);
+    console.log(`${c.cyan}  📺 Channel  ${c.reset}${c.white}${c.bold}${channelName}${c.reset}`);
+    console.log(`${c.cyan}  📝 Messages ${c.reset}${c.white}${c.bold}${messages.length}${c.reset}`);
+    console.log(`${DIVIDER}\n`);
 
-    // Clear and recreate output dirs
+    // ── Prepare output directories ───────────────────────────────────────────
     const outputPath = path.resolve(outputDir);
     const imagesPath = path.join(outputPath, 'images');
+
     if (fs.existsSync(outputPath)) {
         fs.rmSync(outputPath, { recursive: true, force: true });
-        console.log(`${yellow}  🗑  Cleared  ${reset}${dim}${outputPath}${reset}\n`);
+        console.log(`${c.yellow}  🗑  Cleared  ${c.reset}${c.dim}${outputPath}${c.reset}\n`);
     }
     fs.mkdirSync(outputPath, { recursive: true });
     fs.mkdirSync(imagesPath, { recursive: true });
 
+    // ── Convert messages ─────────────────────────────────────────────────────
     let created = 0;
     let imagesCopied = 0;
     const usedFilenames = new Set<string>();
 
     for (const msg of messages) {
-        // Generate markdown
         const markdown = convertMessage(msg);
-        let filename = generateFilename(msg);
-
-        // Handle duplicate filenames
-        if (usedFilenames.has(filename)) {
-            const ext = path.extname(filename);
-            const base = filename.slice(0, -ext.length);
-            filename = `${base}-${msg.id}${ext}`;
-        }
+        const filename = uniqueFilename(generateFilename(msg), usedFilenames, msg.id);
         usedFilenames.add(filename);
 
-        // Write .md file
-        const filePath = path.join(outputPath, filename);
-        fs.writeFileSync(filePath, markdown, 'utf-8');
+        fs.writeFileSync(path.join(outputPath, filename), markdown, 'utf-8');
 
-        // Copy photo if present
         if (msg.photo) {
             const photoSrc = path.join(sourceDir, msg.photo);
             const photoFilename = msg.photo.split('/').pop() ?? msg.photo;
@@ -127,30 +144,29 @@ ${dim}  ────────────────────────
                 fs.copyFileSync(photoSrc, photoDst);
                 imagesCopied++;
             } else {
-                console.warn(`  ${yellow}⚠  Image not found:${reset} ${dim}${photoSrc}${reset}`);
+                console.warn(`  ${c.yellow}⚠  Image not found:${c.reset} ${c.dim}${photoSrc}${c.reset}`);
             }
         }
 
-        const title = filename.replace(/\.md$/, '');
-        console.log(`  ${green}✔${reset}  ${dim}${title}${reset}`);
+        console.log(`  ${c.green}✔${c.reset}  ${c.dim}${filename.replace(/\.md$/, '')}${c.reset}`);
         created++;
     }
 
-    // ── Summary ─────────────────────────────────────────────────────────────
+    // ── Summary ──────────────────────────────────────────────────────────────
     const elapsedMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
     const elapsed = elapsedMs < 1000
         ? `${elapsedMs.toFixed(0)} ms`
         : `${(elapsedMs / 1000).toFixed(2)} s`;
 
     console.log(`
-${dim}  ─────────────────────────────────────────────────${reset}
-${green}${bold}  ✔ Done!${reset}
+${DIVIDER}
+${c.green}${c.bold}  ✔ Done!${c.reset}
 
-${cyan}    Files created  ${reset}${white}${bold}${created}${reset}
-${cyan}    Images copied  ${reset}${white}${bold}${imagesCopied}${reset}
-${cyan}    Output         ${reset}${white}${outputPath}${reset}
-${magenta}    Time elapsed   ${reset}${white}${bold}${elapsed}${reset}
-${dim}  ─────────────────────────────────────────────────${reset}
+${c.cyan}    Files created  ${c.reset}${c.white}${c.bold}${created}${c.reset}
+${c.cyan}    Images copied  ${c.reset}${c.white}${c.bold}${imagesCopied}${c.reset}
+${c.cyan}    Output         ${c.reset}${c.white}${outputPath}${c.reset}
+${c.magenta}    Time elapsed   ${c.reset}${c.white}${c.bold}${elapsed}${c.reset}
+${DIVIDER}
 `);
 }
 
